@@ -80,11 +80,11 @@ class NvidiaBuyer:
         log.info(f"Checking stock for {GPU_DISPLAY_NAMES[gpu]}...")
         while not self.is_in_stock(product_id):
             log.debug(f"NVIDIA Thread loop start")
-            if self.nvidia_status == "Stopped.":
-                log.debug(f"Stopping NVIDIA Thread loop")
-                return
-            else:
-                log.debug(f"NVIDIA Thread loop continuing")
+            # if self.nvidia_status == "Stopped.":
+            #     log.debug(f"Stopping NVIDIA Thread loop")
+            #     return
+            # else:
+            #     log.debug(f"NVIDIA Thread loop continuing")
             sleep(5)
         # send a SMS
         sendsms.sendSMS.send(f"NVidia Card!")
