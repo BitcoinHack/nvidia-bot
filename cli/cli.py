@@ -10,10 +10,10 @@ def main():
 
 
 @click.command()
-@click.argument("gpu", type=GPU())
-def buy(gpu):
-    nv = NvidiaBuyer()
-    nv.buy(gpu)
+# @click.argument("gpu", type=GPU())
+# def buy(gpu):
+#     nv = NvidiaBuyer()
+#     nv.buy(gpu)
 
 
-main.add_command(buy)
+# main.add_command(buy)

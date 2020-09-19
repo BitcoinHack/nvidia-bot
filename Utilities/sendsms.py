@@ -1,22 +1,22 @@
-import logging
 import os
 
 import twilio
 from twilio.rest import Client
-
-log = logging.getLogger(__name__)
-formatter = logging.Formatter(
-    "%(asctime)s : %(message)s", datefmt="%d%m%Y %I:%M:%S %p"
-)
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-log.setLevel(10)
-log.addHandler(handler)
+from utils.logger import log
 
 
 class sendSMS:
 
-    def send():
+    def validCredentials():
+        # unclear how to return the test value directly as a boolean
+        if ((os.environ.get('TWILIO_ACCOUNT') != "") & (os.environ.get('TWILIO_TOKEN') != "")):
+            sendSMS.send("Starting Bot")
+            return True    
+        else:
+            log.warn("You need to set your TWILIO credentials as environment variables")
+            return False
+
+    def send(messageBody):
         log.info(f"sendSMS being called")
         
         # use environment variables to store your Twilio Account and Twilio Token, so they cannot
@@ -31,10 +31,9 @@ class sendSMS:
         # from_="+15005550006",
         # to send a successful but fake SMS
         message = client.messages.create(
-                                    from_='+12184223560',
-                                    body='NVidia Card!',
-                                    to='+14252836409' 
+                                    from_ = '+12184223560',
+                                    body = messageBody,
+                                    to = '+14252836409' 
                                     )
         log.info("SMS Sent: " + message.sid)
         # no error handling here
-

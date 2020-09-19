@@ -1,4 +1,3 @@
-import logging
 import webbrowser
 from datetime import datetime
 from random import randint
@@ -10,15 +9,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 from furl import furl
 from Utilities import sendsms
-
-log = logging.getLogger(__name__)
-formatter = logging.Formatter(
-    "%(asctime)s : %(message)s", datefmt="%d%m%Y %I:%M:%S %p"
-)
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-log.setLevel(10)
-log.addHandler(handler)
+from utils.logger import log
 
 DIGITAL_RIVER_OUT_OF_STOCK_MESSAGE = "PRODUCT_INVENTORY_OUT_OF_STOCK"
 DIGITAL_RIVER_API_KEY = "9485fa7b159e42edb08a83bde0d83dia"
@@ -96,7 +87,7 @@ class NvidiaBuyer:
 
             sleep(randint(5,17))
         # send a SMS
-        sendsms.sendSMS.send()
+        sendsms.sendSMS.send(f"NVidia Card!")
         self.add_to_cart_silent(product_id)
 
     def is_in_stock(self, product_id):

@@ -1,11 +1,10 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from guizero import App, PushButton, Box, TextBox, Text, Combo
-
+from guizero import App, Box, Combo, PushButton, Text, TextBox
 from stores.amazon import Amazon
-from stores.nvidia import GPU_DISPLAY_NAMES
-from stores.nvidia import NvidiaBuyer
+from stores.nvidia import GPU_DISPLAY_NAMES, NvidiaBuyer
+from Utilities import sendsms
 from utils.logger import log
 
 
@@ -101,6 +100,9 @@ class MainUI:
         nv.buy(self.nvidia_gpu.value)
 
     def start_nvidia(self):
+        if sendsms.sendSMS.validCredentials() == False:
+            log.warn("SMS Credentials are not set correctly. SMS will not be sent")
+
         if self.nvidia_gpu.value:
             log.info("Starting NVIDIA bot.")
             self.nvidia_status.value = "Running."
