@@ -5,10 +5,10 @@ from random import randint
 from time import sleep
 
 import requests
-from furl import furl
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
+from furl import furl
 from Utilities import sendsms
 
 log = logging.getLogger(__name__)
