@@ -2,6 +2,7 @@ import logging
 import webbrowser
 from datetime import date
 from time import sleep
+from random import randint
 
 import requests
 
@@ -28,9 +29,9 @@ NVIDIA_CART_URL = "https://store.nvidia.com/store/nvidia/en_US/buy/productID.{pr
 NVIDIA_TOKEN_URL = "https://store.nvidia.com/store/nvidia/SessionToken"
 
 GPU_DISPLAY_NAMES = {
-    "2060S": "NVIDIA GEFORCE RTX 2060 SUPER",
+#    "2060S": "NVIDIA GEFORCE RTX 2060 SUPER",
     "3080": "NVIDIA GEFORCE RTX 3080",
-    "3090": "NVIDIA GEFORCE RTX 3090",
+#    "3090": "NVIDIA GEFORCE RTX 3090",
 }
 
 DEFAULT_HEADERS = {
@@ -129,5 +130,5 @@ class NvidiaBuyer:
         product_id = self.product_data.get(GPU_DISPLAY_NAMES[gpu])["id"]
         log.info(f"Checking stock for {GPU_DISPLAY_NAMES[gpu]}...")
         while not is_in_stock(product_id):
-            sleep(5)
+            sleep(randint(5,17))
         add_to_cart_silent(product_id)
