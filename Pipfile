@@ -10,6 +10,7 @@ black = "*"
 [packages]
 requests = "*"
 click = "*"
+twilio = "*"
 
 [requires]
 python_version = "3.7"

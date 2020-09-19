@@ -1,14 +1,16 @@
 import logging
 import webbrowser
 from datetime import date
-from time import sleep
 from random import randint
+from time import sleep
 
 import requests
 
+from Utilities import sendsms
+
 log = logging.getLogger(__name__)
 formatter = logging.Formatter(
-    "%(asctime)s : %(message)s : %(levelname)s -%(name)s", datefmt="%d%m%Y %I:%M:%S %p"
+    "%(asctime)s : %(message)s", datefmt="%d%m%Y %I:%M:%S %p"
 )
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
@@ -37,7 +39,6 @@ GPU_DISPLAY_NAMES = {
 DEFAULT_HEADERS = {
     "Accept": "application/json",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36 Edg/85.0.564.51",
-#"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36",
 }
 
 
@@ -131,4 +132,7 @@ class NvidiaBuyer:
         log.info(f"Checking stock for {GPU_DISPLAY_NAMES[gpu]}...")
         while not is_in_stock(product_id):
             sleep(randint(5,17))
+
+        # send a SMS
+        sendsms.sendSMS.send()
         add_to_cart_silent(product_id)
