@@ -43,13 +43,13 @@ class MainUI:
 
         self.nvidia_box = Box(self.app, grid=[0, 1], border=1, height="fill", width=200, layout="grid", align="left")
         self.nvidia_inputs_box = Box(self.nvidia_box, grid=[0, 0], border=1, height="fill", width=200, layout="grid")
-        self.start_button_nv = PushButton(self.nvidia_inputs_box, command=self.start_nv, text="start", grid=[1, 0])
-        self.stop_button_nv = PushButton(self.nvidia_inputs_box, command=self.stop_nv, text="stop", enabled=False,
+        self.start_button_nvidia = PushButton(self.nvidia_inputs_box, command=self.start_nvidia, text="start", grid=[1, 0])
+        self.stop_button_nvidia = PushButton(self.nvidia_inputs_box, command=self.stop_nvidia, text="stop", enabled=False,
                                       grid=[2, 0])
-        self.nv_status = Text(self.nvidia_box, grid=[0, 1], align="left", bg="black", color="white", height="fill", text="")
-        self.nv_status.text_size = 10
+        self.nvidia_status = Text(self.nvidia_box, grid=[0, 1], align="left", bg="black", color="white", height="fill", text="")
+        self.nvidia_status.text_size = 10
 
-        self.nv_gpu = Combo(self.nvidia_inputs_box, options=list(GPU_DISPLAY_NAMES.keys()), grid=[0,0])
+        self.nvidia_gpu = Combo(self.nvidia_inputs_box, options=list(GPU_DISPLAY_NAMES.keys()), grid=[0,0])
 
     def save_amzn_options(self):
         data = {
@@ -81,34 +81,42 @@ class MainUI:
         if self.amazon_email.value and self.amazon_password.value and self.amazon_price_limit.value and self.amazon_item_url.value:
             log.info("Starting amazon bot.")
             self.save_amzn_options()
-            self.start_button.disable()
-            self.stop_button.enable()
+            self.start_button_amazon.disable()
+            self.stop_button_amazon.enable()
             self.amazon_status.value = "Running."
             self.amazon_executor.submit(self.amazon_run_item)
 
     def stop_amzn(self):
+        # This likely will not be enough
+        # the infinite loops should check for the stopped value and return
         self.amazon_executor.shutdown()
+        log.debug(f"Shutting Down Amazon Bot")
         self.amazon_status.value = "Stopped."
-        self.start_button.enable()
-        self.stop_button.disable()
+        # once shutdown, an executor cannot be reused
+        # self.start_button_amazon.enable()
+        self.stop_button_amazon.disable()
 
-    def nv_run(self):
+    def nvidia_run(self):
         nv = NvidiaBuyer()
-        nv.buy(self.nv_gpu.value)
+        nv.buy(self.nvidia_gpu.value)
 
-    def start_nv(self):
-        if self.nv_gpu.value:
-            log.info("Starting NV bot.")
-            self.nv_status.value = "Running."
-            self.start_button_nv.disable()
-            self.stop_button_nv.enable()
-            self.amazon_executor.submit(self.nv_run)
+    def start_nvidia(self):
+        if self.nvidia_gpu.value:
+            log.info("Starting NVIDIA bot.")
+            self.nvidia_status.value = "Running."
+            self.start_button_nvidia.disable()
+            self.stop_button_nvidia.enable()
+            self.nvidia_executor.submit(self.nvidia_run)
 
-    def stop_nv(self):
+    def stop_nvidia(self):
+        # This likely will not be enough
+        # the infinite loops should check for the stopped value and return
         self.nvidia_executor.shutdown()
-        self.nv_status.value = "Stopped."
-        self.start_button_nv.enable()
-        self.stop_button_nv.disable()
+        log.debug(f"Shutting Down NVIDIA Bot")
+        self.nvidia_status.value = "Stopped."
+        # once shutdown, an executor cannot be reused
+        # self.start_button_nvidia.enable()
+        self.stop_button_nvidia.disable()
 
 
 if __name__ == "__main__":
