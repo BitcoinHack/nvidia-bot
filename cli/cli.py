@@ -61,7 +61,7 @@ def nvidia(gpu, locale):
 )
 
 
-def amazon(amazon_email, amazon_password, amazon_item_url, amazon_price_limit):
+def amazon(amazon_email, amazon_password, amazon_item_url, amazon_price_limit, amazon_delay):
     os.environ.setdefault("amazon_email", amazon_email)
     os.environ.setdefault("amazon_password", amazon_password)
     os.environ.setdefault("amazon_item_url", amazon_item_url)
