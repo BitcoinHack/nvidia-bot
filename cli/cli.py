@@ -23,7 +23,7 @@ def nvidia(gpu, locale):
 @click.command()
 @click.option("--amazon_email", type=str, prompt="Amazon Email", default=lambda: os.environ.get('amazon_email', ''),
               show_default='current user')
-@click.option("--amazon_password", type=str, prompt="Amazon Password", default=lambda: os.environ.get('amazon_password', ''),
+@click.option("--amazon_password", type=str, prompt="Amazon Password", hide_input=True, default=lambda: os.environ.get('amazon_password', ''),
               show_default='current user')
 @click.option("--amazon_item_url", type=str, prompt="Amazon Item URL", default=lambda: os.environ.get('amazon_item_url', ''),
               show_default='current user')
