@@ -1,9 +1,10 @@
+import logging
 import webbrowser
 from datetime import datetime
-from random import randint
 from time import sleep
 
 import requests
+from furl import furl
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -17,7 +18,6 @@ handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 log.setLevel(10)
 log.addHandler(handler)
-
 DIGITAL_RIVER_OUT_OF_STOCK_MESSAGE = "PRODUCT_INVENTORY_OUT_OF_STOCK"
 DIGITAL_RIVER_API_KEY = "9485fa7b159e42edb08a83bde0d83dia"
 DIGITAL_RIVER_PRODUCT_LIST_URL = "https://api.digitalriver.com/v1/shoppers/me/products"

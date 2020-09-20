@@ -5,7 +5,6 @@ from guizero import App, PushButton, Box, TextBox, Text, Combo
 from cli import cli
 from stores.amazon import Amazon
 from stores.nvidia import GPU_DISPLAY_NAMES, NvidiaBuyer
-from Utilities import sendsms
 from utils.logger import log
 
 
