@@ -12,8 +12,5 @@ click = "*"
 selenium = "*"
 chromedriver-py = "==85.0.4183.87"
 guizero = "*"
-twilio = "*"
 furl = "*"
-
-[requires]
-python_version = "3.7"
+twilio = "*"

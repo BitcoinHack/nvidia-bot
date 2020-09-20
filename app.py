@@ -1,7 +1,8 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+from guizero import App, PushButton, Box, TextBox, Text, Combo
 
-from guizero import App, Box, Combo, PushButton, Text, TextBox
+from cli import cli
 from stores.amazon import Amazon
 from stores.nvidia import GPU_DISPLAY_NAMES, NvidiaBuyer
 from Utilities import sendsms
@@ -101,8 +102,8 @@ class MainUI:
 
     def start_nvidia(self):
         if sendsms.sendSMS.validCredentials() == False:
+            #log.warning("SMS Credentials are not set correctly. SMS will not be sent")
             log.warn("SMS Credentials are not set correctly. SMS will not be sent")
-
         if self.nvidia_gpu.value:
             log.info("Starting NVIDIA bot.")
             self.nvidia_status.value = "Running."
@@ -122,5 +123,6 @@ class MainUI:
 
 
 if __name__ == "__main__":
-    main_ui = MainUI()
-    main_ui.app.display()
+    # main_ui = MainUI()
+    # main_ui.app.display()
+    cli.main()

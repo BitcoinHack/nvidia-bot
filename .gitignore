@@ -2,3 +2,6 @@
 /.idea/
 *.pyc
 /amazon.json
+/build/
+/Pipfile.lock
+twilio_config.json
