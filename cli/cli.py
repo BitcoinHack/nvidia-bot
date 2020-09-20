@@ -29,13 +29,17 @@ def nvidia(gpu, locale):
               show_default='current user')
 @click.option("--amazon_price_limit", type=int, prompt="Maximum Price to Pay", default=lambda: int(os.environ.get('amazon_price_limit', 1000)),
               show_default='current user')
-def amazon(amazon_email, amazon_password, amazon_item_url, amazon_price_limit):
+@click.option("--amazon_delay", type=int, prompt="Delay in seconds between refresh", default=lambda: int(os.environ.get('amazon_delay', 10)),
+              show_default='current user')
+             
+def amazon(amazon_email, amazon_password, amazon_item_url, amazon_price_limit, amazon_delay=10):
     os.environ.setdefault('amazon_email', amazon_email)
     os.environ.setdefault('amazon_password', amazon_password)
     os.environ.setdefault('amazon_item_url', amazon_item_url)
     os.environ.setdefault('amazon_price_limit', str(amazon_price_limit))
+    os.environ.setdefault('amazon_delay', str(amazon_delay))
 
-    amzn_obj = Amazon(username=amazon_email, password=amazon_password, debug=True)
+    amzn_obj = Amazon(username=amazon_email, password=amazon_password, delay=amazon_delay, debug=True, )
     amzn_obj.run_item(item_url=amazon_item_url, price_limit=amazon_price_limit)
 
 

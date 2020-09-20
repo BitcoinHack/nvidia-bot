@@ -40,6 +40,9 @@ class MainUI:
         Text(self.amazon_inputs_box, text="Price Limit", grid=[2, 1], align="left")
         self.amazon_price_limit = TextBox(self.amazon_inputs_box, align="left", grid=[3, 1],  text=self.amzn_input_data['amazon_price_limit'], width=20)
 
+        Text(self.amazon_inputs_box, text="Refresh Delay (s)", grid=[2, 2], align="left")
+        self.amazon_delay = TextBox(self.amazon_inputs_box, align="left", grid=[3, 2],  text=self.amzn_input_data['amazon_delay'], width=20)
+
         self.nvidia_box = Box(self.app, grid=[0, 1], border=1, height="fill", width=200, layout="grid", align="left")
         self.nvidia_inputs_box = Box(self.nvidia_box, grid=[0, 0], border=1, height="fill", width=200, layout="grid")
         self.start_button_nvidia = PushButton(self.nvidia_inputs_box, command=self.start_nvidia, text="start", grid=[1, 0])
@@ -55,7 +58,8 @@ class MainUI:
             'amazon_email': self.amazon_email.value,
             'amazon_password': self.amazon_password.value,
             'amazon_item_url': self.amazon_item_url.value,
-            'amazon_price_limit': self.amazon_price_limit.value
+            'amazon_price_limit': self.amazon_price_limit.value,
+            'amazon_delay': self.amazon_delay.value
         }
         with open('amazon.json', 'w') as outfile:
             json.dump(data, outfile)
@@ -69,15 +73,16 @@ class MainUI:
             'amazon_email': None,
             'amazon_password': None,
             'amazon_item_url': None,
-            'amazon_price_limit': None
+            'amazon_price_limit': None,
+            'amazon_delay': None
         }
 
     def amazon_run_item(self):
-        amzn_obj = Amazon(username=self.amazon_email.value, password=self.amazon_password.value, debug=True)
+        amzn_obj = Amazon(username=self.amazon_email.value, password=self.amazon_password.value, delay=amazon_delay, debug=True)
         amzn_obj.run_item(item_url=self.amazon_item_url.value, price_limit=self.amazon_price_limit.value)
 
     def start_amzn(self):
-        if self.amazon_email.value and self.amazon_password.value and self.amazon_price_limit.value and self.amazon_item_url.value:
+        if self.amazon_email.value and self.amazon_password.value and self.amazon_price_limit.value and self.amazon_item_url.value and self.amazon_delay.value:
             log.info("Starting amazon bot.")
             self.save_amzn_options()
             self.start_button_amazon.disable()
@@ -101,7 +106,6 @@ class MainUI:
 
     def start_nvidia(self):
         if sendsms.sendSMS.validCredentials() == False:
-            #log.warning("SMS Credentials are not set correctly. SMS will not be sent")
             log.warn("SMS Credentials are not set correctly. SMS will not be sent")
         if self.nvidia_gpu.value:
             log.info("Starting NVIDIA bot.")
@@ -125,3 +129,4 @@ if __name__ == "__main__":
     # main_ui = MainUI()
     # main_ui.app.display()
     cli.main()
+    

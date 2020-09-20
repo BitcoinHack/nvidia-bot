@@ -25,18 +25,19 @@ LOGIN_URL = "https://www.amazon.com/ap/signin?openid.pape.max_auth_age=0&openid.
 
 
 class Amazon:
-    def __init__(self, username, password, debug=False):
+    def __init__(self, username, password, delay=10, debug=False):
         self.notification_handler = NotificationHandler()
         if not debug:
             chrome_options.add_argument("--headless")
         self.driver = webdriver.Chrome(
             executable_path=binary_path, options=options, chrome_options=chrome_options
         )
-        self.wait = WebDriverWait(self.driver, 10)
+        self.wait = WebDriverWait(self.driver, 15)
         self.username = username
         self.password = password
+        self.delay = delay
         self.login()
-        time.sleep(3)
+        time.sleep(4)
 
     def login(self):
         self.driver.get(LOGIN_URL)
@@ -49,7 +50,7 @@ class Amazon:
 
         log.info(f"Logged in as {self.username}")
 
-    def run_item(self, item_url, price_limit=1000, delay=3):
+    def run_item(self, item_url, price_limit=1000):
         log.info(f"Loading page: {item_url}")
         self.driver.get(item_url)
         try:
@@ -70,12 +71,12 @@ class Amazon:
             self.driver.refresh()
             log.info("Refreshing page.")
             availability = (
-                WebDriverWait(self.driver, 2)
+                WebDriverWait(self.driver, 10)
                 .until(presence_of_element_located((By.ID, "availability")))
                 .text.replace("\n", " ")
             )
             log.info(f"Current availability message is: {availability}")
-            time.sleep(delay)
+            time.sleep(self.delay)
 
         log.info("Item in stock, buy now button found!")
         price_str = self.driver.find_element_by_id("priceblock_ourprice").text
@@ -92,12 +93,12 @@ class Amazon:
         log.info("Clicking 'Buy Now'.")
 
         try:
-            place_order = WebDriverWait(self.driver, 2).until(
+            place_order = WebDriverWait(self.driver, 10).until(
                 presence_of_element_located((By.ID, "turbo-checkout-pyo-button"))
             )
         except:
             log.debug("Went to check out page.")
-            place_order = WebDriverWait(self.driver, 2).until(
+            place_order = WebDriverWait(self.driver, 10).until(
                 presence_of_element_located((By.NAME, "placeYourOrder1"))
             )
 
