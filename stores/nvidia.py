@@ -85,7 +85,7 @@ class NvidiaBuyer:
             #     return
             # else:
             #     log.debug(f"NVIDIA Thread loop continuing")
-            sleep(5)
+            sleep(17)
         # send a SMS
         sendsms.sendSMS.send(f"NVidia Card!")
         self.add_to_cart_silent(product_id)
