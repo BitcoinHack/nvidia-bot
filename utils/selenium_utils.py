@@ -12,8 +12,8 @@ chrome_options = ChromeOptions()
 chrome_options.add_argument("--disable-application-cache")
 chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 chrome_options.add_experimental_option("useAutomationExtension", False)
-prefs = {"profile.managed_default_content_settings.images": 2}
-chrome_options.add_experimental_option("prefs", prefs)
+# prefs = {"profile.managed_default_content_settings.images": 2}
+# chrome_options.add_experimental_option("prefs", prefs)
 
 
 def wait_for_element(d, e_id, time=30):

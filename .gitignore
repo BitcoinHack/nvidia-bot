@@ -11,3 +11,4 @@ debug.log
 autobuy_config.json
 geckodriver.log
 .profile
+nvidia-bot.log
