@@ -49,7 +49,7 @@ class Amazon:
 
         log.info(f"Logged in as {self.username}")
 
-    def run_item(self, item_url, price_limit=1000):
+    def run_item(self, item_url, price_limit=1000, delay=5):
         log.info(f"Loading page: {item_url}")
         self.driver.get(item_url)
         try:
@@ -73,7 +73,7 @@ class Amazon:
                 presence_of_element_located((By.ID, "availability"))
             ).text.replace("\n", " ")
             log.info(f"Current availability message is: {availability}")
-            time.sleep(5)
+            time.sleep(delay)
 
         log.info("Item in stock, buy now button found!")
         price_str = self.driver.find_element_by_id("priceblock_ourprice").text

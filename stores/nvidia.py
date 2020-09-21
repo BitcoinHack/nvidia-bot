@@ -35,7 +35,7 @@ NVIDIA_CART_URL = "https://store.nvidia.com/store/nvidia/en_US/buy/productID.{pr
 NVIDIA_TOKEN_URL = "https://store.nvidia.com/store/nvidia/SessionToken"
 
 GPU_DISPLAY_NAMES = {
-#    "2060S": "NVIDIA GEFORCE RTX 2060 SUPER",
+    "2060S": "NVIDIA GEFORCE RTX 2060 SUPER",
     "3080": "NVIDIA GEFORCE RTX 3080",
     "3090": "NVIDIA GEFORCE RTX 3090",
 }

@@ -1,9 +1,9 @@
-/dist/
-/.idea/
+dist/
+.idea/
+build/
+Pipfile.lock
 *.pyc
 /amazon.json
-/build/
-/Pipfile.lock
 twilio_config.json
 discord_config.json
 telegram_config.json
