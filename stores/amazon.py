@@ -25,7 +25,7 @@ LOGIN_URL = "https://www.amazon.com/ap/signin?openid.pape.max_auth_age=0&openid.
 
 
 class Amazon:
-    def __init__(self, username, password, delay=10, debug=False):
+    def __init__(self, username, password, debug=False):
         self.notification_handler = NotificationHandler()
         if not debug:
             chrome_options.add_argument("--headless")
@@ -35,7 +35,6 @@ class Amazon:
         self.wait = WebDriverWait(self.driver, 15)
         self.username = username
         self.password = password
-        self.delay = delay
         self.login()
         time.sleep(4)
 
@@ -74,7 +73,7 @@ class Amazon:
                 presence_of_element_located((By.ID, "availability"))
             ).text.replace("\n", " ")
             log.info(f"Current availability message is: {availability}")
-            time.sleep(self.delay)
+            time.sleep(5)
 
         log.info("Item in stock, buy now button found!")
         price_str = self.driver.find_element_by_id("priceblock_ourprice").text
