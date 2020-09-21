@@ -16,6 +16,7 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
+from spinlog import Spinner
 
 from notifications.notifications import NotificationHandler
 from utils import selenium_utils
@@ -91,10 +92,10 @@ PAGE_TITLES_BY_LOCALE = {
         "order_completed": "NVIDIA Online Store - Order Completed",
     },
     "fr_fr": {
-        "signed_in_help": "NVIDIA Online Store - Help",
+        "signed_in_help": "NVIDIA Boutique en ligne - Aide",
         "checkout": "NVIDIA Boutique en ligne - panier et informations de facturation",
         "verify_order": "NVIDIA Boutique en ligne - vérification de commande",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
+        "address_validation": "NVIDIA Boutique en ligne - Page de suggestion et de validation d’adresse",
         "order_completed": "NVIDIA Boutique en ligne - confirmation de commande",
     },
     "it_it": {
@@ -188,7 +189,7 @@ class NvidiaBuyer:
                     self.nvidia_login = self.config["NVIDIA_LOGIN"]
                     self.nvidia_password = self.config["NVIDIA_PASSWORD"]
                     self.auto_buy_enabled = self.config["FULL_AUTOBUY"]
-                    self.cvv = self.config["CVV"]
+                    self.cvv = self.config.get("CVV")
         else:
             log.info("No Autobuy creds found.")
 
@@ -219,8 +220,8 @@ class NvidiaBuyer:
         log.info("Getting product IDs")
         self.access_token = self.get_nividia_access_token()
         self.payment_option = self.get_payment_options()
-        if not self.payment_option.get("id"):
-            log.error("No payment option on account. Disable Autobuy")
+        if not self.payment_option.get("id") or not self.cvv:
+            log.error("No payment option on account or missing CVV. Disable Autobuy")
             self.auto_buy_enabled = False
         else:
             log.debug(self.payment_option)
@@ -295,13 +296,17 @@ class NvidiaBuyer:
     def buy(self, product_id, delay=3):
         log.info(f"Checking stock for {product_id} at {delay} second intervals.")
         while not self.add_to_cart(product_id) and self.enabled:
-            sleep(delay)
+            with Spinner.get("Still working...") as s:
+                sleep(delay)
         if self.enabled:
             self.apply_shopper_details()
             if self.auto_buy_enabled:
                 log.info("Auto buy enabled.")
                 # self.submit_cart()
                 self.selenium_checkout()
+                self.notification_handler.send_notification(
+                    f" {self.gpu_long_name} with product ID: {product_id} ordered!"
+                )
             else:
                 log.info("Auto buy disabled.")
                 cart_url = self.open_cart_url()
@@ -436,7 +441,7 @@ class NvidiaBuyer:
             try:
                 return response_json["paymentOptions"]["paymentOption"][0]
             except:
-                return None
+                return {}
 
     def apply_shopper_details(self):
         log.info("Apply shopper details")
