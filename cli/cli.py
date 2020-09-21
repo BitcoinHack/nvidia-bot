@@ -3,6 +3,7 @@ import os
 import click
 
 from cli.utils import GPU, Locale
+from notifications.notifications import NotificationHandler
 from stores.amazon import Amazon
 from stores.bestbuy import BestBuyHandler
 from stores.nvidia import NvidiaBuyer
@@ -69,6 +70,7 @@ def amazon(amazon_email, amazon_password, amazon_item_url, amazon_price_limit, a
     os.environ.setdefault("amazon_delay", str(amazon_delay))
 
     amzn_obj = Amazon(username=amazon_email, password=amazon_password, delay=amazon_delay, debug=True, )
+    # amzn_obj = Amazon(username=amazon_email, password=amazon_password, delay=amazon_delay, debug=False, )
     amzn_obj.run_item(item_url=amazon_item_url, price_limit=amazon_price_limit)
 
 
@@ -81,7 +83,14 @@ def bestbuy(sku):
     bb = BestBuyHandler(sku)
     bb.run_item()
 
+@click.command()
+def testnotification():
+    notification_handler = NotificationHandler()
+    notification_handler.send_notification(
+        f"Notifications Test"
+    )
 
 main.add_command(nvidia)
 main.add_command(amazon)
 main.add_command(bestbuy)
+main.add_command(testnotification)
