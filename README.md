@@ -102,6 +102,23 @@ What locale shall we use? [en_us]:
 
 ```
 
+### Nvidia Auto-Checkout Guide
+First be sure to have a [Nvidia store](https://www.nvidia.com/en-us/shop/) account with all of your infos (billing address etc ...) already filled in). 
+Then make a copy of `autobuy_config.template_json` and name it `autobuy_config.json`.
+If this file exists and the credentials are valid, the bot will make a purchase for you.
+
+```
+{
+  "NVIDIA_LOGIN": "fuckthesc@lpers.com",        # Your NVIDIA Store login
+  "NVIDIA_PASSWORD": "12345",                   # Your NVIDIA Store password
+  "FULL_AUTOBUY":false,                         # FALSE : Fill your infos but dont click on the last button / TRUE : Buy the card
+  "CREDITCARD_NUMBER":"0000 0000 0000 0000",    # CC number
+  "CREDITCARD_EXP":"09/2020",                   # CC expiration date
+  "CREDITCARD_SECURITY_CODE":"101",             # CCV code
+  "AUTOBUY_COUNTRY_SELECT":""                   # Leave it like that except if you have additional prompts in the Nvidia Store (like in UK)
+}
+```
+
 ### Notifications
 This uses a notifications handler that will support multiple notification channels. 
 
@@ -127,13 +144,13 @@ Make a copy of the `discord_config.template_json` file and name it `discord_conf
 }
 ```
 
-### Telegram
+#### Telegram
 To enable Telegram notifications, you have to create a new bot and get your chat id. Use the directions [here](https://medium.com/@ManHay_Hong/how-to-create-a-telegram-bot-and-send-messages-with-python-4cf314d9fa3e) (Creating your bot and Getting your Chat id sections).
 
 Make a copy of the `telegram_config.template_json` file and name it `telegram_config.json` and place your `BOT_TOKEN` and `BOT_CHAT_ID` values here. 
 ```
 {
-    "BOT_TOKEN" : "1234567890:abcdefghijklmnopqrstuvwxyz"
+    "BOT_TOKEN" : "1234567890:abcdefghijklmnopqrstuvwxyz",
     "BOT_CHAT_ID" : "111222333"
 }
 ```
@@ -142,7 +159,7 @@ It is possible to notify multiple users at once. Just add a list as the `BOT_CHA
 
 ```
 {
-    "BOT_TOKEN" : "1234567890:abcdefghijklmnopqrstuvwxyz"
+    "BOT_TOKEN" : "1234567890:abcdefghijklmnopqrstuvwxyz",
     "BOT_CHAT_ID" : ["111222333", "444555666"]
 }
 ```

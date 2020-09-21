@@ -5,6 +5,9 @@
 /build/
 /Pipfile.lock
 twilio_config.json
-/discord_config.json
+discord_config.json
 telegram_config.json
 debug.log
+autobuy_config.json
+geckodriver.log
+.profile
