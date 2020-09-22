@@ -106,11 +106,11 @@ PAGE_TITLES_BY_LOCALE = {
         "order_completed": "NVIDIA Online Store - Order Completed",
     },
     "nl_nl": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
+        "signed_in_help": "NVIDIA Online winkel - Help",
+        "checkout": "NVIDIA Online winkel - Kassa",
+        "verify_order": "NVIDIA Online winkel - Bestelling controleren",
+        "address_validation": "NVIDIA Online winkel - Adres Validatie Suggestie pagina",
+        "order_completed": "NVIDIA Online winkel - Bestelling voltooid",
     },
     "sv_se": {
         "signed_in_help": "NVIDIA Online Store - Help",
@@ -121,16 +121,16 @@ PAGE_TITLES_BY_LOCALE = {
     },
     "de_de": {
         "signed_in_help": "NVIDIA Online-Shop - Hilfe",
-        "checkout": "NVIDIA Online Store - einkaufswagen",
+        "checkout": "NVIDIA Online-Shop - einkaufswagen",
         "verify_order": "NVIDIA Online-Shop - bestellung überprüfen und bestätigen",
         "address_validation": "NVIDIA Online-Shop - Adressüberprüfung Vorschlagsseite",
         "order_completed": "NVIDIA Online Store - Order Completed",
     },
     "de_at": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
+        "signed_in_help": "NVIDIA Online-Shop - Hilfe",
+        "checkout": "NVIDIA Online-Shop - einkaufswagen",
+        "verify_order": "NVIDIA Online-Shop - bestellung überprüfen und bestätigen",
+        "address_validation": "NVIDIA Online-Shop - Adressüberprüfung Vorschlagsseite",
         "order_completed": "NVIDIA Online Store - Order Completed",
     },
     "en_gb": {
@@ -138,6 +138,13 @@ PAGE_TITLES_BY_LOCALE = {
         "checkout": "NVIDIA Online Store - Checkout",
         "verify_order": "NVIDIA Online Store - Verify Order",
         "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
+        "order_completed": "NVIDIA Online Store - Order Completed",
+    },
+    "da_dek": {
+        "signed_in_help": "NVIDIA Online-butik - Hjælp",
+        "checkout": "NVIDIA Online-butik - Udcheckning",
+        "verify_order": "NVIDIA Online-Shop - bestellung überprüfen und bestätigen",
+        "address_validation": "NVIDIA Online-Shop - Adressüberprüfung Vorschlagsseite",
         "order_completed": "NVIDIA Online Store - Order Completed",
     },
 }
@@ -301,12 +308,12 @@ class NvidiaBuyer:
         if self.enabled:
             self.apply_shopper_details()
             if self.auto_buy_enabled:
+                self.notification_handler.send_notification(
+                    f" {self.gpu_long_name} with product ID: {product_id} available!"
+                )
                 log.info("Auto buy enabled.")
                 # self.submit_cart()
                 self.selenium_checkout()
-                self.notification_handler.send_notification(
-                    f" {self.gpu_long_name} with product ID: {product_id} ordered!"
-                )
             else:
                 log.info("Auto buy disabled.")
                 cart_url = self.open_cart_url()
@@ -381,7 +388,7 @@ class NvidiaBuyer:
             )
             log.debug("Setting suggested shipping information.")
             selenium_utils.wait_for_element(
-                self.driver, "billingAddressOptionRow1"
+                self.driver, "billingAddressOptionRow2"
             ).click()
             selenium_utils.button_click_using_xpath(
                 self.driver, "//input[@id='selectionButton']"
