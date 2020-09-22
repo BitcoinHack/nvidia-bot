@@ -9,6 +9,7 @@ discord_config.json
 telegram_config.json
 debug.log
 autobuy_config.json
+slack_config.json
 geckodriver.log
 .profile
-nvidia-bot.log
+*.log
