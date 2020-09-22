@@ -6,6 +6,7 @@ from notifications.notifications import NotificationHandler
 from cli.utils import QuestionaryOption
 from stores.amazon import Amazon
 from stores.bestbuy import BestBuyHandler
+from stores.evga import Evga
 from stores.nvidia import NvidiaBuyer, GPU_DISPLAY_NAMES, ACCEPTED_LOCALES
 
 
@@ -85,7 +86,15 @@ def testnotification():
         f"Notifications Test"
     )
 
+@click.command()
+@click.option('--test', is_flag=True)
+def evga(test):
+    ev = Evga()
+    ev.buy(test=test)
+
+
 main.add_command(nvidia)
 main.add_command(amazon)
 main.add_command(bestbuy)
 main.add_command(testnotification)
+main.add_command(evga)
