@@ -9,6 +9,7 @@ from time import sleep
 import requests
 from chromedriver_py import binary_path  # this will get you the path variable
 from furl import furl
+from requests.exceptions import Timeout
 from requests.packages.urllib3.util.retry import Retry
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
@@ -190,7 +191,10 @@ class ProductIDChangedException(Exception):
 
 class InvalidAutoBuyConfigException(Exception):
     def __init__(self, provided_json):
-        super().__init__(f"Check the README and update your `autobuy_config.json` file. Your autobuy config is {json.dumps(provided_json, indent=2)}")
+        super().__init__(
+            f"Check the README and update your `autobuy_config.json` file. Your autobuy config is {json.dumps(provided_json, indent=2)}"
+        )
+
 
 class NvidiaBuyer:
     def __init__(self, gpu, locale="en_us"):
@@ -327,31 +331,35 @@ class NvidiaBuyer:
             self.get_product_ids()
             self.run_items()
 
-    def buy(self, product_id, delay=3):
-        log.info(f"Checking stock for {product_id} at {delay} second intervals.")
-        while not self.add_to_cart(product_id) and self.enabled:
-            self.attempt = self.attempt + 1
-            time_delta = str(datetime.now() - self.started_at).split(".")[0]
-            with Spinner.get(
-                f"Still working (attempt {self.attempt}, have been running for {time_delta})..."
-            ) as s:
-                sleep(delay)
-        if self.enabled:
-            self.apply_shopper_details()
-            if self.auto_buy_enabled:
-                self.notification_handler.send_notification(
-                    f" {self.gpu_long_name} with product ID: {product_id} available!"
-                )
-                log.info("Auto buy enabled.")
-                # self.submit_cart()
-                self.selenium_checkout()
-            else:
-                log.info("Auto buy disabled.")
-                cart_url = self.open_cart_url()
-                self.notification_handler.send_notification(
-                    f" {self.gpu_long_name} with product ID: {product_id} in stock: {cart_url}"
-                )
-            self.enabled = False
+    def buy(self, product_id, delay=5):
+        try:
+            log.info(f"Checking stock for {product_id} at {delay} second intervals.")
+            while not self.add_to_cart(product_id) and self.enabled:
+                self.attempt = self.attempt + 1
+                time_delta = str(datetime.now() - self.started_at).split(".")[0]
+                with Spinner.get(
+                    f"Still working (attempt {self.attempt}, have been running for {time_delta})..."
+                ) as s:
+                    sleep(delay)
+            if self.enabled:
+                self.apply_shopper_details()
+                if self.auto_buy_enabled:
+                    self.notification_handler.send_notification(
+                        f" {self.gpu_long_name} with product ID: {product_id} available!"
+                    )
+                    log.info("Auto buy enabled.")
+                    # self.submit_cart()
+                    self.selenium_checkout()
+                else:
+                    log.info("Auto buy disabled.")
+                    cart_url = self.open_cart_url()
+                    self.notification_handler.send_notification(
+                        f" {self.gpu_long_name} with product ID: {product_id} in stock: {cart_url}"
+                    )
+                self.enabled = False
+        except Timeout:
+            log.error("Had a timeout error.")
+            self.buy(product_id)
 
     def open_cart_url(self):
         log.info("Opening cart.")
@@ -400,15 +408,18 @@ class NvidiaBuyer:
         selenium_utils.wait_for_page(
             self.driver, PAGE_TITLES_BY_LOCALE[self.locale]["verify_order"], 5
         )
-        log.info("Submit.")
-        log.debug("Reached order validation page.")
-        self.driver.save_screenshot("nvidia-order-validation.png")
-        self.driver.find_element_by_xpath(f'//*[@value="{autobuy_btns[1]}"]').click()
-        selenium_utils.wait_for_page(
-            self.driver, PAGE_TITLES_BY_LOCALE[self.locale]["order_completed"], 5
-        )
-        self.driver.save_screenshot("nvidia-order-finshed.png")
-        log.info("Done.")
+
+        log.info("F this captcha lmao. Submitting cart.")
+        self.submit_cart()
+        # log.info("Submit.")
+        # log.debug("Reached order validation page.")
+        # self.driver.save_screenshot("nvidia-order-validation.png")
+        # self.driver.find_element_by_xpath(f'//*[@value="{autobuy_btns[1]}"]').click()
+        # selenium_utils.wait_for_page(
+        #     self.driver, PAGE_TITLES_BY_LOCALE[self.locale]["order_completed"], 5
+        # )
+        # self.driver.save_screenshot("nvidia-order-finshed.png")
+        # log.info("Done.")
 
     def address_validation_page(self):
         try:
@@ -437,7 +448,9 @@ class NvidiaBuyer:
                 "format": "json",
             }
             response = self.session.post(
-                DIGITAL_RIVER_ADD_TO_CART_API_URL, headers=DEFAULT_HEADERS, params=params
+                DIGITAL_RIVER_ADD_TO_CART_API_URL,
+                headers=DEFAULT_HEADERS,
+                params=params,
             )
 
             if response.status_code == 200:
