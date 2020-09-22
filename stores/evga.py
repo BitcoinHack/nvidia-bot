@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
+from notifications.notifications import NotificationHandler
 from utils import selenium_utils
 from utils.logger import log
 from utils.selenium_utils import options, chrome_options
@@ -42,6 +43,8 @@ class Evga:
             log.error(f"This is most likely an error with your {CONFIG_PATH} file.")
             raise e
 
+        self.notification_handler = NotificationHandler()
+
         self.login(username, password)
 
     def login(self, username, password):
@@ -54,7 +57,7 @@ class Evga:
         self.driver.execute_cdp_cmd(
             "Network.setUserAgentOverride",
             {
-                "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36"
+                "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36 Edg/85.0.564.51"
             },
         )
         self.driver.execute_script(
@@ -101,6 +104,10 @@ class Evga:
                 '//input[@class="btnBigAddCart"]'
             )
             sleep(delay)
+
+        self.notification_handler.send_notification(
+            f"EVGA Trying to buy a 3080 card"
+        )
 
         #  Add to cart
         atc_buttons[0].click()
@@ -173,3 +180,7 @@ class Evga:
             ).click()
 
         log.info("Finalized Order!")
+        self.notification_handler.send_notification(
+            f"EVGA finalized order"
+        )
+
