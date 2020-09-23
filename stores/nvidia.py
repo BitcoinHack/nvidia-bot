@@ -22,7 +22,7 @@ from notifications.notifications import NotificationHandler
 from utils import selenium_utils
 from utils.http import TimeoutHTTPAdapter
 from utils.logger import log
-from utils.selenium_utils import options, chrome_options
+from utils.selenium_utils import options, enable_headless
 
 DIGITAL_RIVER_OUT_OF_STOCK_MESSAGE = "PRODUCT_INVENTORY_OUT_OF_STOCK"
 DIGITAL_RIVER_API_KEY = "9485fa7b159e42edb08a83bde0d83dia"
@@ -52,6 +52,7 @@ NVIDIA_CART_URL = "https://store.nvidia.com/store/nvidia/en_US/buy/productID.{pr
 NVIDIA_TOKEN_URL = "https://store.nvidia.com/store/nvidia/SessionToken"
 
 GPU_DISPLAY_NAMES = {
+    "Black_shirt": "NVIDIA Logo Graphic Tee - Black",
     "2060S": "NVIDIA GEFORCE RTX 2060 SUPER",
     "3080": "NVIDIA GEFORCE RTX 3080",
     "3090": "NVIDIA GEFORCE RTX 3090",
@@ -197,7 +198,7 @@ class InvalidAutoBuyConfigException(Exception):
 
 
 class NvidiaBuyer:
-    def __init__(self, gpu, locale="en_us"):
+    def __init__(self, gpu, locale="en_us", test=False, headless=False):
         self.product_ids = set([])
         self.cli_locale = locale.lower()
         self.locale = self.map_locales()
@@ -207,6 +208,7 @@ class NvidiaBuyer:
         self.auto_buy_enabled = False
         self.attempt = 0
         self.started_at = datetime.now()
+        self.test = test
 
         self.gpu_long_name = GPU_DISPLAY_NAMES[gpu]
 
@@ -222,6 +224,7 @@ class NvidiaBuyer:
                     self.nvidia_password = self.config["NVIDIA_PASSWORD"]
                     self.auto_buy_enabled = self.config["FULL_AUTOBUY"]
                     self.cvv = self.config.get("CVV")
+                    self.interval = int(self.config.get("INTERVAL", 5))
                 else:
                     raise InvalidAutoBuyConfigException(self.config)
         else:
@@ -244,11 +247,9 @@ class NvidiaBuyer:
         self.notification_handler = NotificationHandler()
 
         log.info("Opening Webdriver")
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
-        self.driver = webdriver.Chrome(
-            executable_path=binary_path, options=options, chrome_options=chrome_options
-        )
+        if headless:
+            enable_headless()
+        self.driver = webdriver.Chrome(executable_path=binary_path, options=options)
         self.sign_in()
         selenium_utils.add_cookies_to_session_from_driver(self.driver, self.session)
         log.info("Adding driver cookies to session")
@@ -341,16 +342,18 @@ class NvidiaBuyer:
             self.get_product_ids()
             self.run_items()
 
-    def buy(self, product_id, delay=5):
+    def buy(self, product_id):
         try:
-            log.info(f"Checking stock for {product_id} at {delay} second intervals.")
+            log.info(
+                f"Checking stock for {product_id} at {self.interval} second intervals."
+            )
             while not self.add_to_cart(product_id) and self.enabled:
                 self.attempt = self.attempt + 1
                 time_delta = str(datetime.now() - self.started_at).split(".")[0]
                 with Spinner.get(
                     f"Still working (attempt {self.attempt}, have been running for {time_delta})..."
                 ) as s:
-                    sleep(delay)
+                    sleep(self.interval)
             if self.enabled:
                 self.apply_shopper_details()
                 if self.auto_buy_enabled:
@@ -419,8 +422,11 @@ class NvidiaBuyer:
             self.driver, PAGE_TITLES_BY_LOCALE[self.locale]["verify_order"], 5
         )
 
-        log.info("F this captcha lmao. Submitting cart.")
-        self.submit_cart()
+        if not self.test:
+            log.info("F this captcha lmao. Submitting cart.")
+            self.submit_cart()
+        else:
+            log.info("Test complete. No actual purchase was made.")
         # log.info("Submit.")
         # log.debug("Reached order validation page.")
         # self.driver.save_screenshot("nvidia-order-validation.png")

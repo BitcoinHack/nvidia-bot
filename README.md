@@ -39,6 +39,16 @@ Commands:
   nvidia
 ```
 
+## Current Functionality
+
+| **Website** | **Auto Checkout** | **Open Cart Link** | **Test flag** |
+|:---:|:---:|:---:|:---:|
+| nvidia.com |`✔`|`✔`|`✔`|
+| amazon.com |`✔`| | |
+| bestbuy.com | |`✔`| |
+| evga.com |`✔` | |`✔`|
+
+
 ## Usage
 
 Ok now we have a basic GUI. GUIs aren't my strong suit, but pretty much the top box is the settings for amazon and
@@ -50,6 +60,11 @@ the bottom box is the settings for Nvidia.
 - Go to a product page
 - Refresh the page until the 'Buy Now' option exists
 - If the price is under the "Price Limit", it will buy the item.
+
+**Amazon flags**
+```
+--no-image : prevents images from loading on amazon webdriver
+```
 
 Example usage:
 ```
@@ -99,6 +114,11 @@ set amazon_price_limit=1000
 - Call Digitalriver API to check if the GPU is in stock until it is in stock
 - Will open a window in your default browser with the GPU in your cart when it is stock.
 
+**Nvidia flags**
+```
+--test : runs a test of the checkout process, without actually making the purchase
+```
+
 Example usage:
 ```
 python app.py nvidia
@@ -147,6 +167,8 @@ Make a copy of `evga_config.template_json` to `evga_config.json`:
 {
   "username": "hari@",
   "password": "password!",
+  "card_pn": "10G-P5-3895-KR",
+  "card_series": "3080",
   "credit_card" : {
             "name": "Hari ",
             "number": "234234",
@@ -161,7 +183,18 @@ Test run command (Uses old gpu list and then stops before finishing the order)
 `python app.py evga --test`
 
 Autobuy command:
-`python app.py evga`
+`python app.py evga --model [indentifier]`
+
+These are the series: "3090" or "3080" (any should work, untested)
+
+P/N numbers can be found in URLs or on product pages such as newegg. They look like this:
+10G-P5-3895-KR
+10G-P5-3881-KR
+10G-P5-3885-KR
+![EVGA PN Screenshot](evga_pn.png)
+
+if it doesn't load the correct page title (since the 3090 isn't listed yet), it will refresh every second until the correct page is loaded.
+
 
 ### Notifications
 This uses a notifications handler that will support multiple notification channels. 

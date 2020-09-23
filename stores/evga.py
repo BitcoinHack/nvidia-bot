@@ -12,26 +12,31 @@ from selenium.webdriver.support.ui import WebDriverWait
 from notifications.notifications import NotificationHandler
 import pickle
 
+from notifications.notifications import NotificationHandler
 from utils import selenium_utils
 from utils.logger import log
-from utils.selenium_utils import options, chrome_options
+from utils.selenium_utils import options, enable_headless
 
 LOGIN_URL = "https://secure.evga.com/us/login.asp"
 CONFIG_PATH = "evga_config.json"
 
 
 class Evga:
-    def __init__(self, debug=False):
-        self.driver = webdriver.Chrome(
-            executable_path=binary_path, options=options, chrome_options=chrome_options
-        )
+    def __init__(self, headless=False):
+        if headless:
+            enable_headless()
+        self.driver = webdriver.Chrome(executable_path=binary_path, options=options)
         self.credit_card = {}
+        self.card_pn = ""
+        self.card_series = ""
         try:
             if path.exists(CONFIG_PATH):
                 with open(CONFIG_PATH) as json_file:
                     config = json.load(json_file)
                     username = config["username"]
                     password = config["password"]
+                    self.card_pn = config["card_pn"]
+                    self.card_series = config["card_series"]
                     self.credit_card["name"] = config["credit_card"]["name"]
                     self.credit_card["number"] = config["credit_card"]["number"]
                     self.credit_card["cvv"] = config["credit_card"]["cvv"]
@@ -99,23 +104,40 @@ class Evga:
 
         log.info("Logged in!")
 
-    def buy(self, delay=5, test=False):
+    def buy(self, delay=5, test=False, model=""):
         if test:
-            self.driver.get(
-                "https://www.evga.com/products/ProductList.aspx?type=0&family=GeForce+16+Series+Family&chipset=GTX+1660"
-            )
-            selenium_utils.wait_for_page(
+            log.info("Refreshing Page Until Title Matches ...")
+            selenium_utils.wait_for_title(
                 self.driver,
                 "EVGA - Products - Graphics - GeForce 16 Series Family - GTX 1660",
+                "https://www.evga.com/products/ProductList.aspx?type=0&family=GeForce+16+Series+Family&chipset=GTX+1660",
             )
         else:
-            self.driver.get(
-                "https://www.evga.com/products/productlist.aspx?type=0&family=GeForce+30+Series+Family&chipset=RTX+3080"
-            )
-            selenium_utils.wait_for_page(
+            log.info("Refreshing Page Until Title Matches ...")
+            selenium_utils.wait_for_title(
                 self.driver,
-                "EVGA - Products - Graphics - GeForce 30 Series Family - RTX 3080",
+                "EVGA - Products - Graphics - GeForce 30 Series Family - RTX "
+                + self.card_series,
+                "https://www.evga.com/products/productlist.aspx?type=0&family=GeForce+30+Series+Family&chipset=RTX+"
+                + self.card_series,
             )
+
+        log.info("matched chipset=RTX+" + self.card_series + "!")
+
+        # check for card
+        log.info("On GPU list Page")
+        card_btn = self.driver.find_elements_by_xpath(
+            "//a[@href='/products/product.aspx?pn=" + self.card_pn + "']"
+        )
+        while not card_btn:
+            log.debug("Refreshing page for GPU")
+            self.driver.refresh()
+            card_btn = self.driver.find_elements_by_xpath(
+                "//a[@href='/products/product.aspx?pn=" + self.card_pn + "']"
+            )
+            sleep(delay)
+
+        card_btn[0].click()
 
         #  Check for stock
         log.info("On GPU Page")

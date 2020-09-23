@@ -29,8 +29,10 @@ def main():
     prompt="What locale shall we use?",
     cls=QuestionaryOption,
 )
-def nvidia(gpu, locale):
-    nv = NvidiaBuyer(gpu, locale)
+@click.option("--test", is_flag=True)
+@click.option("--headless", is_flag=True)
+def nvidia(gpu, locale, test, headless):
+    nv = NvidiaBuyer(gpu, locale, test, headless)
     nv.run_items()
 
 
@@ -64,23 +66,37 @@ def nvidia(gpu, locale):
     show_default="current user",
 )
 @click.option("--no-image", is_flag=True)
-def amazon(amazon_email, amazon_password, amazon_item_url, amazon_price_limit, no_image):
+@click.option("--headless", is_flag=True)
+def amazon(
+    amazon_email,
+    amazon_password,
+    amazon_item_url,
+    amazon_price_limit,
+    no_image,
+    headless,
+):
     os.environ.setdefault("amazon_email", amazon_email)
     os.environ.setdefault("amazon_password", amazon_password)
     os.environ.setdefault("amazon_item_url", amazon_item_url)
     os.environ.setdefault("amazon_price_limit", str(amazon_price_limit))
-	
-    if(no_image):
-	    selenium_utils.no_amazon_image()
 
-    amzn_obj = Amazon(username=amazon_email, password=amazon_password, debug=True)
+    if no_image:
+        selenium_utils.no_amazon_image()
+
+    amzn_obj = Amazon(
+        username=amazon_email, password=amazon_password, headless=headless
+    )
     amzn_obj.run_item(item_url=amazon_item_url, price_limit=amazon_price_limit)
+
+    if no_image:
+        selenium_utils.no_amazon_image()
 
 
 @click.command()
 @click.option("--sku", type=str, required=True)
-def bestbuy(sku):
-    bb = BestBuyHandler(sku)
+@click.option("--headless", is_flag=True)
+def bestbuy(sku, headless):
+    bb = BestBuyHandler(sku, headless)
     bb.run_item()
 
 @click.command()
@@ -92,9 +108,11 @@ def testnotification():
 
 @click.command()
 @click.option("--test", is_flag=True)
-def evga(test):
-    ev = Evga()
-    ev.buy(test=test)
+@click.option("--model", type=str)
+@click.option("--headless", is_flag=True)
+def evga(test, model, headless):
+    ev = Evga(headless)
+    ev.buy(test=test, model=model)
 
 
 main.add_command(nvidia)
