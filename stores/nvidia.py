@@ -244,6 +244,8 @@ class NvidiaBuyer:
         self.notification_handler = NotificationHandler()
 
         log.info("Opening Webdriver")
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
         self.driver = webdriver.Chrome(
             executable_path=binary_path, options=options, chrome_options=chrome_options
         )
@@ -477,8 +479,8 @@ class NvidiaBuyer:
                 log.debug("item not in stock")
                 return False
         except Exception as ex:
-            log.warning(str(ex))
-            log.warning("The connection has been reset.")
+            log.debug(str(ex))
+            log.debug("The connection has been reset.")
             return False
 
     def get_ext_ip(self):
