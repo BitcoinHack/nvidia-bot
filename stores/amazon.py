@@ -102,12 +102,12 @@ class Amazon:
         log.info("Clicking 'Buy Now'.")
 
         try:
-            place_order = WebDriverWait(self.driver, 10).until(
+            place_order = WebDriverWait(self.driver, 2).until(
                 presence_of_element_located((By.ID, "turbo-checkout-pyo-button"))
             )
         except:
             log.debug("Went to check out page.")
-            place_order = WebDriverWait(self.driver, 10).until(
+            place_order = WebDriverWait(self.driver, 2).until(
                 presence_of_element_located((By.NAME, "placeYourOrder1"))
             )
 

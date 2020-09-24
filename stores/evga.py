@@ -104,7 +104,7 @@ class Evga:
 
         log.info("Logged in!")
 
-    def buy(self, delay=5, test=False, model="", card_pn=""):
+    def buy(self, delay=5, test=False, model=""):
         self.card_pn = card_pn
         if test:
             log.info("Refreshing Page Until Title Matches ...")
