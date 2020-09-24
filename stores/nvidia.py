@@ -149,7 +149,7 @@ DEFAULT_HEADERS = {
 CART_SUCCESS_CODES = {201, requests.codes.ok}
 
 AUTOBUY_CONFIG_PATH = "autobuy_config.json"
-AUTOBUY_CONFIG_KEYS = ["NVIDIA_LOGIN", "NVIDIA_PASSWORD", "CVV"]
+AUTOBUY_CONFIG_KEYS = ["NVIDIA_LOGIN", "NVIDIA_PASSWORD"]
 
 
 class ProductIDChangedException(Exception):

@@ -105,7 +105,6 @@ class Evga:
         log.info("Logged in!")
 
     def buy(self, delay=5, test=False, model=""):
-        self.card_pn = card_pn
         if test:
             log.info("Refreshing Page Until Title Matches ...")
             selenium_utils.wait_for_title(

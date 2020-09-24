@@ -2,7 +2,6 @@ import logging
 import os
 
 log = logging.getLogger("nvidia-bot")
-LOGLEVEL = os.environ.get("LOGLEVEL", "DEBUG").upper()
 log.setLevel(logging.DEBUG)
 
 file_log_handler = logging.FileHandler("nvidia-bot.log")
