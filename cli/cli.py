@@ -110,9 +110,10 @@ def testnotification():
 @click.option("--test", is_flag=True)
 @click.option("--model", type=str)
 @click.option("--headless", is_flag=True)
-def evga(test, model, headless):
+@click.option("--card_pn", type=str)
+def evga(test, model, card_pn, headless):
     ev = Evga(headless)
-    ev.buy(test=test, model=model)
+    ev.buy(test=test, model=model, card_pn=card_pn)
 
 
 main.add_command(nvidia)
