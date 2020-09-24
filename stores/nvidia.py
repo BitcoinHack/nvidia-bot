@@ -6,7 +6,6 @@ from datetime import datetime
 from time import sleep
 
 import requests
-from furl import furl
 from requests.exceptions import Timeout
 from requests.packages.urllib3.util.retry import Retry
 from spinlog import Spinner
@@ -216,7 +215,10 @@ class NvidiaBuyer:
         return self.cli_locale
 
     def get_product_ids(self):
-        self.product_ids = [PRODUCT_IDS[self.locale][self.gpu]]
+        if isinstance(PRODUCT_IDS[self.locale][self.gpu], list):
+            self.product_ids = PRODUCT_IDS[self.locale][self.gpu]
+        if isinstance(PRODUCT_IDS[self.locale][self.gpu], str):
+            self.product_ids = [PRODUCT_IDS[self.locale][self.gpu]]
 
     def run_items(self):
         log.info(
@@ -254,8 +256,10 @@ class NvidiaBuyer:
             if self.enabled:
                 log.info(f"{self.gpu_long_name} is in stock. Go buy it.")
                 cart_url = self.open_cart_url(product_id)
-                self.notification_handler.send_notification(f" {self.gpu_long_name} with product ID: {product_id} in "
-                                                            f"stock: {cart_url}")
+                self.notification_handler.send_notification(
+                    f" {self.gpu_long_name} with product ID: {product_id} in "
+                    f"stock: {cart_url}"
+                )
                 self.enabled = False
         except Timeout:
             log.error("Had a timeout error.")
@@ -274,15 +278,25 @@ class NvidiaBuyer:
         else:
             return False
 
+
+
     def open_cart_url(self, product_id):
-        log.info("Opening cart.")
-        params = {
-            "Action": "AddItemToRequisition",
-            "SiteID": "nvidia",
-            "Locale": self.locale,
-            "productID": product_id,
-            "quantity": 1,
+        STORE_URLS = {
+            "3090": "/geforce/graphics-cards/30-series/rtx-3090",
+            "3080": "/geforce/graphics-cards/30-series/rtx-3080",
+            "3070": "/geforce/graphics-cards/30-series/rtx-3070",
+            "2060S": "/geforce/graphics-cards/rtx-2060-super"
         }
-        url = furl(NVIDIA_CART_URL).set(params)
-        webbrowser.open_new_tab(url.url)
-        return url.url
+
+        log.info("Opening cart.")
+        # params = {
+        #     "Action": "AddItemToRequisition",
+        #     "SiteID": "nvidia",
+        #     "Locale": self.locale,
+        #     "productID": product_id,
+        #     "quantity": 1,
+        # }
+        # url = furl(NVIDIA_CART_URL).set(params).url
+        url = f"https://www.nvidia.com/{self.locale.replace('_', '-')}{STORE_URLS[self.gpu]}"
+        webbrowser.open_new_tab(url)
+        return url
