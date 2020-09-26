@@ -4,6 +4,7 @@ build/
 Pipfile.lock
 *.pyc
 /amazon.json
+autobuy_config.json
 twilio_config.json
 discord_config.json
 telegram_config.json
