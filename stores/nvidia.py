@@ -17,7 +17,7 @@ from utils.logger import log
 NVIDIA_PRODUCT_API = "https://api.nvidia.partners/edge/product/search?page=1&limit=9&locale=en-us&category=GPU"
 NVIDIA_CART_URL = "https://store.nvidia.com/store?Action=AddItemToRequisition&SiteID=nvidia&Locale=en_US&productID={product_id}&quantity=1"
 NVIDIA_TOKEN_URL = "https://store.nvidia.com/store/nvidia/SessionToken"
-NVIDIA_STOCK_API = "https://api-prod.nvidia.com/direct-sales-shop/DR/products/{locale}/USD/{product_id}"
+NVIDIA_STOCK_API = "https://api-prod.nvidia.com/direct-sales-shop/DR/products/{locale}/{currency}/{product_id}"
 NVIDIA_ADD_TO_CART_API = "https://api-prod.nvidia.com/direct-sales-shop/DR/add-to-cart"
 
 GPU_DISPLAY_NAMES = {
@@ -26,121 +26,19 @@ GPU_DISPLAY_NAMES = {
     "3090": "NVIDIA GEFORCE RTX 3090",
 }
 
-ACCEPTED_LOCALES = [
-    "en_us",
-    "en_gb",
-    "de_de",
-    "fr_fr",
-    "it_it",
-    "es_es",
-    "nl_nl",
-    "sv_se",
-    "de_at",
-    "fr_be",
-    "da_dk",
-    "cs_cz",
-]
-
-PAGE_TITLES_BY_LOCALE = {
-    "en_us": {  # Verified
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "fr_be": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "es_es": {
-        "signed_in_help": "NVIDIA Tienda electrónica - Ayuda",
-        "checkout": "NVIDIA Tienda electrónica - Caja",
-        "verify_order": "NVIDIA Tienda electrónica - Verificar pedido",
-        "address_validation": "NVIDIA Tienda electrónica - Página de sugerencia para la validación de la dirección",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "fr_fr": {
-        "signed_in_help": "NVIDIA Boutique en ligne - Aide",
-        "checkout": "NVIDIA Boutique en ligne - panier et informations de facturation",
-        "verify_order": "NVIDIA Boutique en ligne - vérification de commande",
-        "address_validation": "NVIDIA Boutique en ligne - Page de suggestion et de validation d’adresse",
-        "order_completed": "NVIDIA Boutique en ligne - confirmation de commande",
-    },
-    "it_it": {
-        "signed_in_help": "NVIDIA Negozio Online - Guida",
-        "checkout": "NVIDIA Negozio Online - Vai alla cassa",
-        "verify_order": "NVIDIA Negozio Online - Verifica ordine",
-        "address_validation": "NVIDIA Negozio Online - Pagina di suggerimento per la validazione dell'indirizzo",
-        "order_completed": "NVIDIA Negozio Online - Ordine completato",
-    },
-    "nl_nl": {
-        "signed_in_help": "NVIDIA Online winkel - Help",
-        "checkout": "NVIDIA Online winkel - Kassa",
-        "verify_order": "NVIDIA Online winkel - Bestelling controleren",
-        "address_validation": "NVIDIA Online winkel - Adres Validatie Suggestie pagina",
-        "order_completed": "NVIDIA Online winkel - Bestelling voltooid",
-    },
-    "sv_se": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "de_de": {
-        "signed_in_help": "NVIDIA Online-Shop - Hilfe",
-        "checkout": "NVIDIA Online-Shop - einkaufswagen",
-        "verify_order": "NVIDIA Online-Shop - bestellung überprüfen und bestätigen",
-        "address_validation": "NVIDIA Online-Shop - Adressüberprüfung Vorschlagsseite",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "de_at": {
-        "signed_in_help": "NVIDIA Online-Shop - Hilfe",
-        "checkout": "NVIDIA Online-Shop - einkaufswagen",
-        "verify_order": "NVIDIA Online-Shop - bestellung überprüfen und bestätigen",
-        "address_validation": "NVIDIA Online-Shop - Adressüberprüfung Vorschlagsseite",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "en_gb": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "da_dk": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-    "cs_cz": {
-        "signed_in_help": "NVIDIA Online Store - Help",
-        "checkout": "NVIDIA Online Store - Checkout",
-        "verify_order": "NVIDIA Online Store - Verify Order",
-        "address_validation": "NVIDIA Online Store - Address Validation Suggestion Page",
-        "order_completed": "NVIDIA Online Store - Order Completed",
-    },
-}
-
-autobuy_locale_btns = {
-    "fr_be": ["continuer", "envoyer"],
-    "es_es": ["continuar", "enviar"],
-    "fr_fr": ["continuer", "envoyer"],
-    "it_it": ["continua", "invia"],
-    "nl_nl": ["doorgaan", "indienen"],
-    "sv_se": ["continue", "submit"],
-    "de_de": ["Weiter", "Senden"],
-    "de_at": ["Weiter", "Senden"],
-    "en_gb": ["Continue Checkout", "submit"],
-    "en_us": ["continue", "submit"],
-    "da_dk": ["continue", "submit"],
-    "cs_cz": ["continue", "submit"],
+CURRENCY_LOCALE_MAP = {
+    "en_us": "USD",
+    "en_gb": "GBP",
+    "de_de": "EUR",
+    "fr_fr": "EUR",
+    "it_it": "EUR",
+    "es_es": "EUR",
+    "nl_nl": "EUR",
+    "sv_se": "SEK",
+    "de_at": "EUR",
+    "fr_be": "EUR",
+    "da_dk": "DKK",
+    "cs_cz": "CZK",
 }
 
 DEFAULT_HEADERS = {
@@ -262,7 +160,11 @@ class NvidiaBuyer:
 
     def is_in_stock(self, product_id):
         response = self.session.get(
-            NVIDIA_STOCK_API.format(product_id=product_id, locale=self.locale),
+            NVIDIA_STOCK_API.format(
+                product_id=product_id,
+                locale=self.locale,
+                currency=CURRENCY_LOCALE_MAP.get(self.locale, "USD"),
+            ),
             headers=DEFAULT_HEADERS,
         )
         log.debug(f"Stock check response code: {response.status_code}")
