@@ -11,7 +11,7 @@ file_log_handler.setFormatter(
 file_log_handler.setLevel(logging.DEBUG)
 
 
-LOGLEVEL = os.environ.get("LOGLEVEL", "INFO").upper()
+LOGLEVEL = os.environ.get("LOGLEVEL", "DEBUG").upper()
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(
     logging.Formatter('%(levelname)s: "%(asctime)s - %(message)s')
