@@ -13,6 +13,7 @@ slack_config.json
 geckodriver.log
 .profile
 .profile-amz*
+*_config.json
 *.log
 __pycache__/
 *.py[cod]
