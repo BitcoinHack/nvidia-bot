@@ -106,7 +106,7 @@ class Amazon:
             self.login()
             log.info("Waiting 15 seconds.")
             time.sleep(
-                15
+                25
             )  # We can remove this once I get more info on the phone verification page.
 
     def is_logged_in(self):
@@ -137,7 +137,7 @@ class Amazon:
 
         log.info(f"Logged in as {self.username}")
 
-    def run_item(self, delay=3, test=False):
+    def run_item(self, delay=37, test=False):
         log.info("Checking stock for items.")
         while not self.something_in_stock():
             time.sleep(delay)
@@ -173,7 +173,7 @@ class Amazon:
             if solution == "Not solved":
                 log.info(f"Failed to solve, lets reload and get a new captcha.")
                 self.driver.execute_script("window.location.reload()")
-                time.sleep(5)
+                time.sleep(17)
                 self.get_captcha_help()
             else:
                 self.driver.find_element_by_xpath(
@@ -199,7 +199,7 @@ class Amazon:
                     f"selenium browser is on. There may be a file saved at: amazon-{func.__name__}.png"
                 )
                 self.driver.save_screenshot(f"amazon-{func.__name__}.png")
-                time.sleep(60)
+                time.sleep(90)
                 self.driver.close()
                 raise e
 
@@ -240,7 +240,7 @@ class Amazon:
         else:
             if retry < 3:
                 log.info("Couldn't find button. Lets retry in a sec.")
-                time.sleep(5)
+                time.sleep(15)
                 self.finalize_order_button(test, retry + 1)
             else:
                 log.info(
