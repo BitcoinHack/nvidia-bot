@@ -146,7 +146,7 @@ class BestBuyHandler:
 
     def run_item(self):
         while not self.in_stock():
-            sleep(5)
+            sleep(37)
         log.info(f"Item {self.sku_id} is in stock!")
         if self.auto_buy:
             self.auto_checkout()
@@ -261,7 +261,7 @@ class BestBuyHandler:
                     )
                 return
             log.info("Error Starting Checkout")
-            sleep(5)
+            sleep(37)
 
     def submit_shipping(self):
         log.info("Starting Checkout")
@@ -351,4 +351,4 @@ class BestBuyHandler:
                 log.info("Got TAS Data")
                 return json.loads(r.text)
             except Exception as e:
-                sleep(5)
+                sleep(17)
