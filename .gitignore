@@ -19,3 +19,4 @@ __pycache__/
 *.py[cod]
 *.pkl
 .vscode/
+amazon-wait_for_pages.png
