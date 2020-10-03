@@ -106,7 +106,7 @@ class Evga:
 
         log.info("Logged in!")
 
-    def buy(self, delay=5, test=False):
+    def buy(self, delay=37, test=False):
         if test:
             log.info("Refreshing Page Until Title Matches ...")
             selenium_utils.wait_for_title(
