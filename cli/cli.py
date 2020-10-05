@@ -4,6 +4,7 @@ from notifications.notifications import NotificationHandler
 from cli.utils import QuestionaryOption
 from functools import wraps
 from notifications.notifications import NotificationHandler
+from signal import signal, SIGINT
 from stores.amazon import Amazon
 from stores.bestbuy import BestBuyHandler
 from stores.evga import Evga
@@ -12,6 +13,11 @@ from utils import selenium_utils
 from utils.logger import log
 
 notification_handler = NotificationHandler()
+
+
+def handler(signal, frame):
+    log.info("Caught the stop, exiting.")
+    exit(0)
 
 
 def notify_on_crash(func):
@@ -101,6 +107,8 @@ def test_notifications():
     )
     log.info(f"A notification was sent to the following handlers: {enabled_handlers}")
 
+
+signal(SIGINT, handler)
 
 main.add_command(nvidia)
 main.add_command(amazon)
