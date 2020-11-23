@@ -2,13 +2,18 @@ import json
 import secrets
 import time
 from os import path
+from datetime import datetime
 from price_parser import parse_price
 
 from amazoncaptcha import AmazonCaptcha
 from chromedriver_py import binary_path  # this will get you the path variable
 from furl import furl
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    SessionNotCreatedException,
+    TimeoutException,
+)
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -21,6 +26,7 @@ from price_parser import parse_price
 AMAZON_URLS = {
     "BASE_URL": "https://{domain}/",
     "CART_URL": "https://{domain}/gp/aws/cart/add.html",
+    "OFFER_URL": "https://{domain}/gp/offer-listing/",
 }
 CHECKOUT_URL = "https://{domain}/gp/cart/desktop/go-to-checkout.html/ref=ox_sc_proceed?partialCheckoutCart=1&isToBeGiftWrappedBefore=0&proceedToRetailCheckout=Proceed+to+checkout&proceedToCheckout=1&cartInitiateId={cart_id}"
 
@@ -95,41 +101,49 @@ ADD_TO_CART_TITLES = [
     "Amazon.it: confermare l'operazione",
     "AmazonSmile: Please Confirm Your Action",
 ]
-DOGGO_TITLES = [
-    "Sorry! Something went wrong!"
-]
+DOGGO_TITLES = ["Sorry! Something went wrong!"]
+
 
 class Amazon:
     def __init__(self, notification_handler, headless=False):
         self.notification_handler = notification_handler
-        if headless:
-            enable_headless()
-        options.add_argument(f"user-data-dir=.profile-amz")
-        try:
-            self.driver = webdriver.Chrome(executable_path=binary_path, options=options)
-            self.wait = WebDriverWait(self.driver, 10)
-        except Exception:
-            log.error("Another instance of chrome is running, close that and try again.")
-            exit(1)
+        self.asin_list = []
+        self.reserve = []
+
         if path.exists(AUTOBUY_CONFIG_PATH):
             with open(AUTOBUY_CONFIG_PATH) as json_file:
                 try:
                     config = json.load(json_file)
                     self.username = config["username"]
                     self.password = config["password"]
-                    self.asin_list = config["asin_list"]
-                    self.reserve = float(config["reserve"])
-                    self.amazon_website = config.get("amazon_website", "smile.amazon.com")
-                    assert isinstance(self.asin_list, list)
+                    self.asin_groups = int(config["asin_groups"])
+                    self.amazon_website = config.get(
+                        "amazon_website", "smile.amazon.com"
+                    )
+                    for x in range(self.asin_groups):
+                        self.asin_list.append(config[f"asin_list_{x + 1}"])
+                        self.reserve.append(float(config[f"reserve_{x + 1}"]))
+                    # assert isinstance(self.asin_list, list)
                 except Exception:
                     log.error(
                         "amazon_config.json file not formatted properly: https://github.com/Hari-Nagarajan/nvidia-bot/wiki/Usage#json-configuration"
                     )
+                    exit(0)
         else:
             log.error(
                 "No config file found, see here on how to fix this: https://github.com/Hari-Nagarajan/nvidia-bot/wiki/Usage#json-configuration"
             )
             exit(0)
+
+        if headless:
+            enable_headless()
+        options.add_argument(f"user-data-dir=.profile-amz")
+        try:
+            self.driver = webdriver.Chrome(executable_path=binary_path, options=options)
+            self.wait = WebDriverWait(self.driver, 10)
+        except Exception as e:
+            log.error(e)
+            exit(1)
 
         for key in AMAZON_URLS.keys():
             AMAZON_URLS[key] = AMAZON_URLS[key].format(domain=self.amazon_website)
@@ -143,11 +157,12 @@ class Amazon:
             log.info("Lets log in.")
 
             is_smile = "smile" in AMAZON_URLS["BASE_URL"]
-            xpath = '//*[@id="ge-hello"]/div/span/a' if is_smile else '//*[@id="nav-link-accountList"]/div/span'
-            selenium_utils.button_click_using_xpath(
-                self.driver,
-                xpath
+            xpath = (
+                '//*[@id="ge-hello"]/div/span/a'
+                if is_smile
+                else '//*[@id="nav-link-accountList"]/div/span'
             )
+            selenium_utils.button_click_using_xpath(self.driver, xpath)
             log.info("Wait for Sign In page")
             self.check_if_captcha(self.wait_for_pages, SIGN_IN_TITLES)
             self.login()
@@ -191,68 +206,191 @@ class Amazon:
 
     def run_item(self, delay=37, test=False):
         log.info("Checking stock for items.")
-        while not self.something_in_stock():
-            time.sleep(delay)
-        self.notification_handler.send_notification(
-            "Your items on Amazon.com were found!", True
+        checkout_success = False
+        while not checkout_success:
+            pop_list = []
+            for i in range(len(self.asin_list)):
+                for asin in self.asin_list[i]:
+                    checkout_success = self.check_stock(asin, self.reserve[i])
+                    if checkout_success:
+                        log.info(f"attempting to buy {asin}")
+                        if self.checkout(test=test):
+                            log.info(f"bought {asin}")
+                            pop_list.append(asin)
+                            break
+                        else:
+                            log.info(f"checkout for {asin} failed")
+                            checkout_success = False
+                    time.sleep(delay)
+            if pop_list:
+                for asin in pop_list:
+                    for i in range(len(self.asin_list)):
+                        if asin in self.asin_list[i]:
+                            self.asin_list.pop(i)
+                            self.reserve.pop(i)
+                            break
+            if self.asin_list:  # keep bot going if additional ASINs left
+                checkout_success = False
+
+    def check_stock(self, asin, reserve):
+        f = furl(
+            AMAZON_URLS["OFFER_URL"]
+            + asin
+            + "/f_freeShipping=on&ref=olp_f_new?f_new=true"
         )
-        self.checkout(test=test)
-
-    def something_in_stock(self):
-        #params = {"anticache": str(secrets.token_urlsafe(32))}
-        params = {}
-        for x in range(len(self.asin_list)):
-            params[f"ASIN.{x + 1}"] = self.asin_list[x]
-            params[f"Quantity.{x + 1}"] = 1
-
-        f = furl(AMAZON_URLS["CART_URL"])
-        f.set(params)
-        self.driver.get(f.url)
-        title = self.driver.title
-        #if len(self.asin_list) > 1 and title in DOGGO_TITLES:
-        if title in DOGGO_TITLES:
-            good_asin_list = []
-            for asin in self.asin_list:
-                checkparams = {}
-                checkparams[f"ASIN.1"] = asin
-                checkparams[f"Quantity.1"] = 1
-                check = furl(AMAZON_URLS["CART_URL"])
-                check.set(checkparams)
-                self.driver.get(check.url)
-                sanity_check = self.driver.title
-                if sanity_check in DOGGO_TITLES:
-                    log.error(f"{asin} blocked from bulk adding by Amazon")
-                    time.sleep(1)
-                else:
-                    log.info(f"{asin} appears to allow adding")
-                    good_asin_list.append(asin)
-            if len(good_asin_list)>0:
-                log.info("Revising ASIN list to include only good ASINs listed above")
-                self.asin_list = good_asin_list
-            else:
-                log.error("No ASINs work in list. Try using smile.amazon.com")
-                exit(1)
-        self.check_if_captcha(self.wait_for_pages, ADD_TO_CART_TITLES)
-        price_element = self.driver.find_elements_by_xpath('//td[@class="price item-row"]')
-        if price_element:
-            str_price = price_element[0].text
-            log.info(f'Item Cost: {str_price}')
-            price = parse_price(str_price)
+        try:
+            self.driver.get(f.url)
+            elements = self.driver.find_elements_by_xpath(
+                '//*[@name="submit.addToCart"]'
+            )
+            prices = self.driver.find_elements_by_xpath(
+                '//*[@class="a-size-large a-color-price olpOfferPrice a-text-bold"]'
+            )
+        except Exception as e:
+            log.debug(e)
+            return False
+        x = 0
+        for str_price in prices:
+            price = parse_price(str_price.text)
             priceFloat = price.amount
             if priceFloat is None:
-                log.error("Error reading price information on page.")
-                return False
-            elif priceFloat <= self.reserve:
-                log.info("One or more items in stock and under reserve!")
+                log.error("Error reading price information on row.")
+                x = x + 1
+                continue
+            elif priceFloat <= reserve:
+                log.info("Item in stock and under reserve!")
+                elements[x].click()
+                log.info("clicking add to cart")
                 return True
             else:
-                log.info("No stock available under reserve price")
-                #log.info("{}".format(self.asin_list))
-                return False
-            return False
-        else:
-            return False
-        
+                x = x + 1
+        return False
+
+    def something_in_stock_it(self):
+        for x in range(len(self.asin_list)):
+            bad_asin_list = []
+            for asin in self.asin_list[x]:
+                params = {}
+                params[f"ASIN.1"] = asin
+                params[f"Quantity.1"] = 1
+                f = furl(AMAZON_URLS["CART_URL"])
+                f.set(params)
+                self.driver.get(f.url)
+                title = self.driver.title
+                if title in DOGGO_TITLES:
+                    log.error(
+                        f"{asin} blocked from bulk adding by Amazon, it will be removed from ASIN list"
+                    )
+                    bad_asin_list.append(asin)
+                else:
+                    self.check_if_captcha(self.wait_for_pages, ADD_TO_CART_TITLES)
+                    price_element = self.driver.find_elements_by_xpath(
+                        '//td[@class="price item-row"]'
+                    )
+                    if price_element:
+                        str_price = price_element[0].text
+                        log.info(f"Item Cost: {str_price}")
+                        price = parse_price(str_price)
+                        priceFloat = price.amount
+                        if priceFloat is None:
+                            log.error("Error reading price information on page.")
+                        elif priceFloat <= self.reserve[x]:
+                            log.info("Item in stock and under reserve!")
+                            if bad_asin_list:
+                                for bad_asin in bad_asin_list:
+                                    self.asin_list[x].remove(bad_asin)
+                            return asin
+                        else:
+                            log.info("Item greater than reserve price")
+            if bad_asin_list:
+                for bad_asin in bad_asin_list:
+                    self.asin_list[x].remove(bad_asin)
+        return 0
+
+    def take_screenshot(self, page):
+        try:
+            self.now = datetime.now()
+            self.date = self.now.strftime("%m-%d-%Y_%H_%M_%S")
+            self.ss_name = "screenshot-" + page + "_" + self.date + ".png"
+            self.driver.save_screenshot(self.ss_name)
+            self.notification_handler.send_notification(page, self.ss_name)
+        except TimeoutException:
+            log.info("Timed out taking screenshot, trying to continue anyway")
+            pass
+        except Exception as e:
+            log.error(f"Trying to recover from error: {e}")
+            pass
+
+    def something_in_stock_mass(self):
+        for i in range(len(self.asin_list)):
+            params = {}
+            for x in range(len(self.asin_list[i])):
+                params[f"ASIN.{x + 1}"] = self.asin_list[i][x]
+                params[f"Quantity.{x + 1}"] = 1
+            f = furl(AMAZON_URLS["CART_URL"])
+            f.set(params)
+            self.driver.get(f.url)
+            title = self.driver.title
+            bad_list_flag = False
+            if title in DOGGO_TITLES:
+                good_asin_list = []
+                for asin in self.asin_list[i]:
+                    checkparams = {}
+                    checkparams[f"ASIN.1"] = asin
+                    checkparams[f"Quantity.1"] = 1
+                    check = furl(AMAZON_URLS["CART_URL"])
+                    check.set(checkparams)
+                    self.driver.get(check.url)
+                    sanity_check = self.driver.title
+                    if sanity_check in DOGGO_TITLES:
+                        log.error(f"{asin} blocked from bulk adding by Amazon")
+                    else:
+                        log.info(f"{asin} appears to allow adding")
+                        good_asin_list.append(asin)
+                    time.sleep(1)
+                if len(good_asin_list) > 0:
+                    log.info(
+                        "Revising ASIN list to include only good ASINs listed above"
+                    )
+                    self.asin_list[i] = good_asin_list
+                else:
+                    log.error(f"No ASINs work in list {i + 1}.")
+                    self.asin_list[i] = self.asin_list[i][
+                        0
+                    ]  # just assign one asin to list, can't remove during execution
+                    bad_list_flag = True
+            if bad_list_flag:
+                continue
+            self.check_if_captcha(self.wait_for_pages, ADD_TO_CART_TITLES)
+            price_element = self.driver.find_elements_by_xpath(
+                '//td[@class="price item-row"]'
+            )
+            if price_element:
+                price_flag = False
+                price_warning_flag = False
+                for price_e in price_element:
+                    str_price = price_e.text
+                    log.info(f"Item Cost: {str_price}")
+                    price = parse_price(str_price)
+                    priceFloat = price.amount
+                    if priceFloat is None:
+                        log.error("Error reading price information on page.")
+                    elif priceFloat <= self.reserve[i]:
+                        log.info("Item in stock and under reserve!")
+                        price_flag = True
+                    else:
+                        log.info("Item greater than reserve price")
+                        price_warning_flag = True
+                if price_flag:
+                    log.info("Attempting to purchase")
+                    if price_warning_flag:
+                        log.info(
+                            "Cart included items below and above reserve price, cancel unwanted items ASAP!"
+                        )
+                        self.take_screenshot("attempting-to-purchase")
+                    return i + 1
+        return 0
+
     def get_captcha_help(self):
         if not self.on_captcha_page():
             log.info("Not on captcha page.")
@@ -270,13 +408,10 @@ class Amazon:
                 time.sleep(17)
                 self.get_captcha_help()
             else:
-                self.driver.save_screenshot("screenshot.png")
+                self.take_screenshot("captcha")
                 self.driver.find_element_by_xpath(
                     '//*[@id="captchacharacters"]'
                 ).send_keys(solution + Keys.RETURN)
-                self.notification_handler.send_notification(
-                    f"Solved captcha with solution: {solution}", True
-                )
         except Exception as e:
             log.debug(e)
             log.info("Error trying to solve captcha. Refresh and retry.")
@@ -309,27 +444,17 @@ class Amazon:
                     f"An error happened, please submit a bug report including a screenshot of the page the "
                     f"selenium browser is on. There may be a file saved at: amazon-{func.__name__}.png"
                 )
-                self.driver.save_screenshot(f"amazon-{func.__name__}.png")
-                self.driver.save_screenshot("screenshot.png")
-                self.notification_handler.send_notification(
-                    f"Error on {self.driver.title}", True
-                )
+                self.take_screenshot("title-fail")
                 time.sleep(90)
                 self.driver.close()
                 log.debug(e)
                 pass
 
     def wait_for_pages(self, page_titles, t=30):
-        log.debug(f"wait_for_pages({page_titles}, {t})")
         try:
-            title = selenium_utils.wait_for_any_title(self.driver, page_titles, t)
-            if not title in page_titles:
-                log.error(
-                    "{} is not a recognized title, report to #tech-support or open an issue on github".format()
-                )
-            pass
+            selenium_utils.wait_for_any_title(self.driver, page_titles, t)
         except Exception as e:
-            log.debug(e)
+            log.debug(f"wait_for_pages exception: {e}")
             pass
 
     def wait_for_pyo_page(self):
@@ -340,7 +465,9 @@ class Amazon:
             self.login()
 
     def finalize_order_button(self, test, retry=0):
+        returnVal = False
         button_xpaths = [
+            '//*[@id="orderSummaryPrimaryActionBtn"]',
             '//*[@id="bottomSubmitOrderButtonId"]/span/input',
             '//*[@id="placeYourOrder"]/span/input',
             '//*[@id="submitOrderButtonId"]/span/input',
@@ -356,21 +483,21 @@ class Amazon:
                     button = self.driver.find_element_by_xpath(button_xpath)
             except NoSuchElementException:
                 log.debug(f"{button_xpath}, lets try a different one.")
-
         if button:
             log.info(f"Clicking Button: {button.text}")
             if not test:
                 button.click()
-            return
+            return True
         else:
             if retry < 3:
                 log.info("Couldn't find button. Lets retry in a sec.")
                 time.sleep(15)
-                self.finalize_order_button(test, retry + 1)
+                returnVal = self.finalize_order_button(test, retry + 1)
             else:
                 log.info(
                     "Couldn't find button after 3 retries. Open a GH issue for this."
                 )
+        return returnVal
 
     def wait_for_order_completed(self, test):
         if not test:
@@ -381,15 +508,9 @@ class Amazon:
             )
 
     def checkout(self, test):
-        log.info("Clicking continue.")
-        self.driver.save_screenshot("screenshot.png")
-        self.notification_handler.send_notification("Starting Checkout", True)
-        self.driver.find_element_by_xpath('//input[@value="add"]').click()
-
         log.info("Waiting for Cart Page")
         self.check_if_captcha(self.wait_for_pages, SHOPING_CART_TITLES)
-        self.driver.save_screenshot("screenshot.png")
-        self.notification_handler.send_notification("Cart Page", True)
+        self.take_screenshot("waiting-for-cart")
 
         try:  # This is fast.
             log.info("Quick redirect to checkout page")
@@ -404,30 +525,27 @@ class Amazon:
             log.info("clicking checkout.")
             try:
                 self.driver.find_element_by_xpath(
-                    '//*[@id="sc-buy-box-ptc-button"]/span/input'
+                    '//*[@id="hlb-ptc-btn-native"]'
                 ).click()
-            finally:
-                self.driver.save_screenshot("screenshot.png")
-                self.notification_handler.send_notification(
-                    "Failed to checkout. Returning to stock check.", True
-                )
+            except:
+                self.take_screenshot("start-checkout")
                 log.info("Failed to checkout. Returning to stock check.")
-                self.run_item(test=test)
+                return False
 
         log.info("Waiting for Place Your Order Page")
         self.wait_for_pyo_page()
 
         log.info("Finishing checkout")
-        self.driver.save_screenshot("screenshot.png")
-        self.notification_handler.send_notification("Finishing checkout", True)
+        self.take_screenshot("finish-checkout")
 
-        self.finalize_order_button(test)
+        if not self.finalize_order_button(test):
+            log.info("Failed to finalize the order, trying again.")
+            self.take_screenshot("finalize-fail")
+            return False
 
         log.info("Waiting for Order completed page.")
         self.wait_for_order_completed(test)
 
         log.info("Order Placed.")
-        self.driver.save_screenshot("screenshot.png")
-        self.notification_handler.send_notification("Order Placed", True)
-
-        time.sleep(20)
+        self.take_screenshot("order-placed")
+        return True

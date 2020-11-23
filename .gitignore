@@ -21,3 +21,4 @@ __pycache__/
 .vscode/
 amazon-wait_for_pages.png
 /config/apprise_config.json
+*.png
